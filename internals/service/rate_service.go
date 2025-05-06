@@ -34,7 +34,6 @@ type rateServiceImpl struct {
 	historyDaysLimit int
 }
 
-// NewRateService creates a new RateService.
 func NewRateService(repo repository.RateRepository, historyDaysLimit int) RateService {
 	return &rateServiceImpl{
 		repo:             repo,
@@ -64,14 +63,12 @@ func (s *rateServiceImpl) validateDate(dateStr string) (time.Time, error) {
 		return time.Time{}, ErrInvalidDateFormat
 	}
 
-	// Check if the date is within the allowed historical range (e.g., last 90 days)
 	oldestAllowedDate := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -s.historyDaysLimit)
 	if date.Before(oldestAllowedDate) {
 		return time.Time{}, fmt.Errorf("%w: requested date %s is older than %d days", ErrDateTooOld, dateStr, s.historyDaysLimit)
 	}
-	// Optional: Check if the date is in the future (depends on requirements/API)
+
 	if date.After(time.Now().UTC().Truncate(24 * time.Hour)) {
-		// Or return latest rate? For now, let's consider future dates invalid for historical endpoint
 		return time.Time{}, errors.New("historical date cannot be in the future")
 	}
 
@@ -119,7 +116,6 @@ func (s *rateServiceImpl) Convert(ctx context.Context, req domain.ConversionRequ
 		return nil, ErrInvalidAmount
 	}
 	if req.From == req.To {
-		// Or handle as rate 1.0? Requirement implies conversion between *different* currencies.
 		return nil, ErrSameCurrency
 	}
 	var rate float64

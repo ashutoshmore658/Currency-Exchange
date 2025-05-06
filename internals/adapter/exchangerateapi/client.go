@@ -19,15 +19,12 @@ type RateAPIClient interface {
 	FetchHistoricalTimeSeriesRates(ctx context.Context, startDate time.Time, endDate time.Time, baseCurrency domain.Currency, targetCurrencies []domain.Currency) (*domain.HistoricalTimeSeriesRatesResponse, error)
 }
 
-// ExRatesClient is an implementation using the adrg/exrates library.
 type ExRatesClient struct{}
 
-// NewClient creates a new ExRatesClient.
 func NewClient() RateAPIClient {
 	return &ExRatesClient{}
 }
 
-// FetchLatestRates fetches the latest rates using the adrg/exrates library.
 func (c *ExRatesClient) FetchLatestRates(ctx context.Context, base domain.Currency, targets []domain.Currency) (map[domain.Currency]float64, time.Time, error) {
 	targetStrings := make([]string, len(targets))
 	for i, t := range targets {
@@ -52,7 +49,6 @@ func (c *ExRatesClient) FetchLatestRates(ctx context.Context, base domain.Curren
 	return result, rateTime, nil
 }
 
-// FetchHistoricalRates fetches historical rates using the adrg/exrates library.
 func (c *ExRatesClient) FetchHistoricalRates(ctx context.Context, date time.Time, base domain.Currency, targets []domain.Currency) (map[domain.Currency]float64, error) {
 	targetStrings := make([]string, len(targets))
 	for i, t := range targets {
