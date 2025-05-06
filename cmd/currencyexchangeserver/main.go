@@ -9,6 +9,7 @@ import (
 	"currency-exchange/internals/config"
 	"currency-exchange/internals/repository"
 	"currency-exchange/internals/service"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -21,6 +22,14 @@ import (
 )
 
 func main() {
+	wd, _ := os.Getwd()
+	banner := wd + "/" + "cmd/currencyexchangeserver/" + "banner.txt"
+	content, err := os.ReadFile(banner)
+	if err != nil {
+		fmt.Println("Error reading banner:", err)
+		return
+	}
+	fmt.Print(string(content) + "\n\n\n")
 	log.Println("Starting Exchange Rate Service...")
 
 	cfg, err := config.LoadConfig()
