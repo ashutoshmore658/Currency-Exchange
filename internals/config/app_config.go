@@ -21,7 +21,7 @@ type Config struct {
 
 func LoadConfig() (*Config, error) {
 	viper.SetDefault("SERVER_PORT", "8080")
-	viper.SetDefault("EXTERNAL_API_URL", "https://api.exchangerate.host")
+	viper.SetDefault("EXTERNAL_API_URL", "https://api.frankfurter.app/")
 	viper.SetDefault("LATEST_RATE_CACHE_TTL", "55m")
 	viper.SetDefault("HISTORICAL_CACHE_TTL", "24h")
 	viper.SetDefault("REFRESH_INTERVAL", "1h")

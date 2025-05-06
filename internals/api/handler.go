@@ -58,12 +58,13 @@ func (h *Handler) GetLatest(c *fiber.Ctx) error {
 	}
 
 	symbolsStr := strings.ToUpper(c.Query("symbol"))
+	if symbolsStr == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "target currency parameter is required")
+	}
 
-	if symbolsStr != "" {
-		if len(strings.Split(symbolsStr, ",")) > 1 {
-			return fiber.NewError(fiber.StatusBadRequest, "More than one target currencies provided, specify one !")
-		}
-
+	symbols := strings.Split(symbolsStr, ",")
+	if len(symbols) > 1 {
+		return fiber.NewError(fiber.StatusBadRequest, "More than one target currencies provided, specify any one !")
 	}
 
 	rates, err := h.rateService.GetLatestRates(c.Context(), baseCurrency, domain.Currency(symbolsStr))
@@ -85,7 +86,7 @@ func (h *Handler) Convert(c *fiber.Ctx) error {
 
 	amount, err := strconv.ParseFloat(amountStr, 64)
 	if err != nil || amount <= 0 {
-		return fiber.NewError(fiber.StatusBadRequest, "amount must be a positive number")
+		return fiber.NewError(fiber.StatusBadRequest, "amount must be a non-zero positive number")
 	}
 
 	dateStr := c.Query("date")
@@ -135,12 +136,13 @@ func (h *Handler) GetHistorical(c *fiber.Ctx) error {
 	}
 
 	symbolsStr := strings.ToUpper(c.Query("symbol"))
+	if symbolsStr == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "target currency parameter is required")
+	}
 
-	if symbolsStr != "" {
-		if len(strings.Split(symbolsStr, ",")) > 1 {
-			return fiber.NewError(fiber.StatusBadRequest, "More than one target currencies provided, specify one !")
-		}
-
+	symbols := strings.Split(symbolsStr, ",")
+	if len(symbols) > 1 {
+		return fiber.NewError(fiber.StatusBadRequest, "More than one target currencies provided, specify any one !")
 	}
 
 	rates, err := h.rateService.GetHistoricalRates(c.Context(), startDate, endDate, baseCurrency, domain.Currency(symbolsStr))
