@@ -38,7 +38,7 @@ type rateServiceImpl struct {
 func NewRateService(repo repository.RateRepository, historyDaysLimit int) RateService {
 	return &rateServiceImpl{
 		repo:             repo,
-		historyDaysLimit: 90,
+		historyDaysLimit: historyDaysLimit,
 	}
 }
 
