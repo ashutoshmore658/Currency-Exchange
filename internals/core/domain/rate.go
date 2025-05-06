@@ -53,9 +53,10 @@ type LatestRates struct {
 }
 
 type HistoricalRates struct {
-	Base   Currency                      `json:"base"`
-	Rates  map[string]map[string]float64 `json:"rates"`
-	Amount float64                       `json:"amount"`
+	Base   Currency              `json:"base"`
+	Rates  map[time.Time]float64 `json:"rates"`
+	Amount float64               `json:"amount"`
+	Target Currency              `json:"target"`
 }
 
 type HistoricalTimeSeriesRatesResponse struct {
