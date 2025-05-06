@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"currency-exchange/internals/adapter/cache"
+	"currency-exchange/internals/adapter/cache/schedular"
 	"currency-exchange/internals/adapter/exchangerateapi"
 	"currency-exchange/internals/api"
 	"currency-exchange/internals/config"
@@ -15,6 +17,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -25,8 +28,14 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.RedisAddr,
+		Password: cfg.RedisPassword,
+		DB:       cfg.RedisDB,
+	})
+	redisCache := cache.NewRedisCache(redisClient, cfg.LatestRateCacheTTL, cfg.HistoricalCacheTTL)
 	apiClient := exchangerateapi.NewClient()
-	rateRepo := repository.NewCachedRateRepository(apiClient)
+	rateRepo := repository.NewCachedRateRepository(apiClient, redisCache)
 	rateService := service.NewRateService(rateRepo, 90)
 	apiHandler := api.NewHandler(rateService)
 
@@ -38,6 +47,8 @@ func main() {
 	app.Use(logger.New())
 
 	api.SetupRouter(app, apiHandler)
+
+	go schedular.StartBackgroundRefreshWithLock(context.Background(), cfg.RefreshInterval, apiClient, redisCache, redisClient, rateService)
 
 	go func() {
 		log.Printf("Server starting on port %s", cfg.ServerPort)

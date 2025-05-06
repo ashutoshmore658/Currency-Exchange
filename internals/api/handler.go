@@ -57,18 +57,16 @@ func (h *Handler) GetLatest(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "base query parameter is required")
 	}
 
-	symbolsStr := strings.ToUpper(c.Query("symbols"))
-	var targetCurrencies []domain.Currency
+	symbolsStr := strings.ToUpper(c.Query("symbol"))
 
 	if symbolsStr != "" {
-		for _, s := range strings.Split(symbolsStr, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				targetCurrencies = append(targetCurrencies, domain.Currency(trimmed))
-			}
+		if len(strings.Split(symbolsStr, ",")) > 1 {
+			return fiber.NewError(fiber.StatusBadRequest, "More than one target currencies provided, specify one !")
 		}
+
 	}
 
-	rates, err := h.rateService.GetLatestRates(c.Context(), baseCurrency, targetCurrencies)
+	rates, err := h.rateService.GetLatestRates(c.Context(), baseCurrency, domain.Currency(symbolsStr))
 	if err != nil {
 		return err
 	}
@@ -136,18 +134,16 @@ func (h *Handler) GetHistorical(c *fiber.Ctx) error {
 		endDate = startDate
 	}
 
-	symbolsStr := strings.ToUpper(c.Query("symbols"))
-	var targetCurrencies []domain.Currency
+	symbolsStr := strings.ToUpper(c.Query("symbol"))
 
 	if symbolsStr != "" {
-		for _, s := range strings.Split(symbolsStr, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				targetCurrencies = append(targetCurrencies, domain.Currency(trimmed))
-			}
+		if len(strings.Split(symbolsStr, ",")) > 1 {
+			return fiber.NewError(fiber.StatusBadRequest, "More than one target currencies provided, specify one !")
 		}
+
 	}
 
-	rates, err := h.rateService.GetHistoricalRates(c.Context(), startDate, endDate, baseCurrency, targetCurrencies)
+	rates, err := h.rateService.GetHistoricalRates(c.Context(), startDate, endDate, baseCurrency, domain.Currency(symbolsStr))
 	if err != nil {
 		return err
 	}
