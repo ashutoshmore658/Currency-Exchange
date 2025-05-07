@@ -55,7 +55,6 @@ sudo docker system prune -f
 ```sh
 sudo docker-compose up --build
 ```
-```
 
 This will ensure a clean slate by removing all related containers, volumes, images, and dangling resources before rebuilding your project.
 
