@@ -35,6 +35,10 @@ func (cd *CustomDate) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (cd CustomDate) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + time.Time(cd).Format("2006-01-02") + `"`), nil
+}
+
 func (cd CustomDate) ToTime() time.Time {
 	return time.Time(cd)
 }

@@ -51,6 +51,21 @@ func ErrorHandler(c *fiber.Ctx, err error) error {
 	})
 }
 
+func (h *Handler) checkCurrencies(baseCurrency, targetCurrency domain.Currency) error {
+	err := h.rateService.ValidateCurrencies(baseCurrency)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	err = h.rateService.ValidateCurrencies(targetCurrency)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return nil
+
+}
+
 func (h *Handler) GetLatest(c *fiber.Ctx) error {
 	baseCurrency := domain.Currency(strings.ToUpper(c.Query("base")))
 	if baseCurrency == "" {
@@ -65,6 +80,11 @@ func (h *Handler) GetLatest(c *fiber.Ctx) error {
 	symbols := strings.Split(symbolsStr, ",")
 	if len(symbols) > 1 {
 		return fiber.NewError(fiber.StatusBadRequest, "More than one target currencies provided, specify any one !")
+	}
+
+	err := h.checkCurrencies(baseCurrency, domain.Currency(symbolsStr))
+	if err != nil {
+		return err
 	}
 
 	rates, err := h.rateService.GetLatestRates(c.Context(), baseCurrency, domain.Currency(symbolsStr))
@@ -82,6 +102,11 @@ func (h *Handler) Convert(c *fiber.Ctx) error {
 
 	if fromCurrency == "" || toCurrency == "" || amountStr == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "from, to, and amount query parameters are required")
+	}
+
+	err := h.checkCurrencies(fromCurrency, toCurrency)
+	if err != nil {
+		return err
 	}
 
 	amount, err := strconv.ParseFloat(amountStr, 64)
@@ -120,9 +145,18 @@ func (h *Handler) GetHistorical(c *fiber.Ctx) error {
 	startDate := c.Query("startDate")
 	endDate := c.Query("endDate")
 	baseCurrency := domain.Currency(strings.ToUpper(c.Query("base")))
-
 	if baseCurrency == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "`base` query parameter is required")
+	}
+
+	symbolsStr := strings.ToUpper(c.Query("symbol"))
+	if symbolsStr == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "target currency parameter is required")
+	}
+
+	err := h.checkCurrencies(baseCurrency, domain.Currency(symbolsStr))
+	if err != nil {
+		return err
 	}
 
 	if startDate == "" && endDate == "" {
@@ -133,11 +167,6 @@ func (h *Handler) GetHistorical(c *fiber.Ctx) error {
 		startDate = endDate
 	} else if endDate == "" {
 		endDate = startDate
-	}
-
-	symbolsStr := strings.ToUpper(c.Query("symbol"))
-	if symbolsStr == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "target currency parameter is required")
 	}
 
 	symbols := strings.Split(symbolsStr, ",")
