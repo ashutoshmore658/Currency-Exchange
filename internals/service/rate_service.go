@@ -59,7 +59,7 @@ func (s *rateServiceImpl) ValidateCurrencies(currency domain.Currency) error {
 func (s *rateServiceImpl) validateDate(dateStr string) (time.Time, error) {
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
-		return time.Time{}, fiber.NewError(fiber.StatusBadRequest, "invalid date format please format the date in yyyy-mm-dd")
+		return time.Time{}, fiber.NewError(fiber.StatusBadRequest, "invalid date format please format the date in YYYY-MM-DD")
 	}
 
 	oldestAllowedDate := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -s.historyDaysLimit)
