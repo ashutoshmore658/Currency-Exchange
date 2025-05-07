@@ -31,12 +31,10 @@ sudo docker-compose up --build
 
 ```
 
-```markdown
 ### Troubleshooting: Rebuilding the Docker Environment
 
 If you encounter issues or want to start fresh, especially when using an older Docker version, follow these steps to clean up and rebuild your Docker environment:
 
-```
 # Stop and remove containers, volumes, images, and orphaned containers
 ```sh
 sudo docker-compose down -v --rmi all --remove-orphans
@@ -84,12 +82,16 @@ The service can be configured using the following environment variables. You can
 | `REDIS_DB`             | Redis database number                             | `0`                             |
 | `DATE_FMT`             | Date format used throughout the service           | `2006-01-02`                    |
 ----------------------------------------------------------------------------------------------------------------
+
 ---
+
 **Note:**  
 If you are too lazy to change environment variables, no problem!  
 We have set sensible default values, so you can directly use the service by building and running it with Docker Compose without any additional configuration.
 
 Make sure to reload your environment or restart your Docker containers after changing these variables if you do customize them.
+
+
 ---
 
 ## How to Test the Endpoints
