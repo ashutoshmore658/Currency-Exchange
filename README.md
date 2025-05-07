@@ -35,20 +35,20 @@ sudo docker-compose up --build
 
 If you encounter issues or want to start fresh, especially when using an older Docker version, follow these steps to clean up and rebuild your Docker environment:
 
-# Stop and remove containers, volumes, images, and orphaned containers
+## Stop and remove containers, volumes, images, and orphaned containers
 ```sh
 sudo docker-compose down -v --rmi all --remove-orphans
 
 ```
 
-# Remove unused Docker data to free up space
+## Remove unused Docker data to free up space
 
 ```sh
 sudo docker system prune -f
 
 ```
 
-# Rebuild and start the containers
+## Rebuild and start the containers
 
 ```sh
 sudo docker-compose up --build
