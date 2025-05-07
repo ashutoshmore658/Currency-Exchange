@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  exchange-rate-service:
+    build: .
+    container_name: exchange-rate-service
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
+      REDIS_ADDR: redis:6379
+      REDIS_PASSWORD: ""
+      REDIS_DB: 0
+      LATEST_RATE_CACHE_TTL: 55m
+      HISTORICAL_CACHE_TTL: 24h
+      REFRESH_INTERVAL: 1h
+      HISTORY_DAYS_LIMIT: 90
+    depends_on:
+      - redis
+    restart: always
