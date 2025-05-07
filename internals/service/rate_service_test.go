@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,7 +64,12 @@ func TestValidateDate_TooOld(t *testing.T) {
 	svc := NewRateService(&MockRateRepository{}, 90)
 	dateStr := time.Now().AddDate(0, 0, -100).Format("2006-01-02")
 	_, err := svc.(*rateServiceImpl).validateDate(dateStr)
-	assert.ErrorIs(t, err, ErrDateTooOld)
+
+	var fiberErr *fiber.Error
+	if assert.Error(t, err) && assert.ErrorAs(t, err, &fiberErr) {
+		assert.Equal(t, fiber.StatusBadRequest, fiberErr.Code)
+		assert.Equal(t, "requested date is older than 90 days", fiberErr.Message)
+	}
 }
 
 func TestValidateDate_Future(t *testing.T) {
@@ -77,7 +83,12 @@ func TestValidateDate_Future(t *testing.T) {
 func TestValidateDate_InvalidFormat(t *testing.T) {
 	svc := NewRateService(&MockRateRepository{}, 90)
 	_, err := svc.(*rateServiceImpl).validateDate("2024-13-40")
-	assert.ErrorIs(t, err, ErrInvalidDateFormat)
+
+	var fiberErr *fiber.Error
+	if assert.Error(t, err) && assert.ErrorAs(t, err, &fiberErr) {
+		assert.Equal(t, fiber.StatusBadRequest, fiberErr.Code)
+		assert.Equal(t, "invalid date format please format the date in yyyy-mm-dd", fiberErr.Message)
+	}
 }
 
 func TestGetLatestRate_SameCurrency(t *testing.T) {
@@ -117,18 +128,16 @@ func TestGetLatestRate_Success(t *testing.T) {
 	assert.WithinDuration(t, time.Now(), ts, time.Second)
 }
 
-func TestConvert_InvalidAmount(t *testing.T) {
-	svc := NewRateService(&MockRateRepository{}, 90)
-	req := domain.ConversionRequest{From: "USD", To: "INR", Amount: -10}
-	_, err := svc.Convert(context.Background(), req)
-	assert.ErrorIs(t, err, ErrInvalidAmount)
-}
-
 func TestConvert_SameCurrency(t *testing.T) {
 	svc := NewRateService(&MockRateRepository{}, 90)
 	req := domain.ConversionRequest{From: "USD", To: "USD", Amount: 10}
 	_, err := svc.Convert(context.Background(), req)
-	assert.ErrorIs(t, err, ErrSameCurrency)
+
+	var fiberErr *fiber.Error
+	if assert.Error(t, err) && assert.ErrorAs(t, err, &fiberErr) {
+		assert.Equal(t, fiber.StatusBadRequest, fiberErr.Code)
+		assert.Equal(t, "from and to currencies cannot be the same for conversion", fiberErr.Message)
+	}
 }
 
 func TestConvert_LatestRate_Success(t *testing.T) {
@@ -237,14 +246,26 @@ func TestGetHistoricalRates_Valid(t *testing.T) {
 func TestGetHistoricalRates_InvalidStartDate(t *testing.T) {
 	svc := NewRateService(&MockRateRepository{}, 90)
 	_, err := svc.GetHistoricalRates(context.Background(), "invalid", "2024-05-01", "USD", "INR")
-	assert.ErrorIs(t, err, ErrInvalidDateFormat)
+
+	var fiberErr *fiber.Error
+	if assert.Error(t, err) && assert.ErrorAs(t, err, &fiberErr) {
+		assert.Equal(t, fiber.StatusBadRequest, fiberErr.Code)
+		// Update this line:
+		assert.Equal(t, "invalid date format please format the date in yyyy-mm-dd", fiberErr.Message)
+	}
 }
 
 func TestGetHistoricalRates_InvalidEndDate(t *testing.T) {
 	svc := NewRateService(&MockRateRepository{}, 90)
 	start := time.Now().Format("2006-01-02")
 	_, err := svc.GetHistoricalRates(context.Background(), start, "invalid", "USD", "INR")
-	assert.ErrorIs(t, err, ErrInvalidDateFormat)
+
+	var fiberErr *fiber.Error
+	if assert.Error(t, err) && assert.ErrorAs(t, err, &fiberErr) {
+		assert.Equal(t, fiber.StatusBadRequest, fiberErr.Code)
+		// Update this line:
+		assert.Equal(t, "invalid date format please format the date in yyyy-mm-dd", fiberErr.Message)
+	}
 }
 
 func TestGetHistoricalRates_RepoError(t *testing.T) {

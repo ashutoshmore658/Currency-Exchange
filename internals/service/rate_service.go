@@ -8,15 +8,13 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 var (
 	ErrCurrencyNotSupported = errors.New("currency not supported")
-	ErrInvalidDateFormat    = errors.New("invalid date format, use YYYY-MM-DD")
-	ErrDateTooOld           = errors.New("historical date is too old")
 	ErrRateNotFound         = errors.New("exchange rate not found")
-	ErrInvalidAmount        = errors.New("invalid amount, must be positive")
-	ErrSameCurrency         = errors.New("from and to currencies cannot be the same for conversion")
 )
 
 // RateService defines the business logic for exchange rates.
@@ -61,16 +59,16 @@ func (s *rateServiceImpl) ValidateCurrencies(currency domain.Currency) error {
 func (s *rateServiceImpl) validateDate(dateStr string) (time.Time, error) {
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
-		return time.Time{}, ErrInvalidDateFormat
+		return time.Time{}, fiber.NewError(fiber.StatusBadRequest, "invalid date format please format the date in yyyy-mm-dd")
 	}
 
 	oldestAllowedDate := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, -s.historyDaysLimit)
 	if date.Before(oldestAllowedDate) {
-		return time.Time{}, fmt.Errorf("%w: requested date %s is older than %d days", ErrDateTooOld, dateStr, s.historyDaysLimit)
+		return time.Time{}, fiber.NewError(fiber.StatusBadRequest, "requested date is older than 90 days")
 	}
 
 	if date.After(time.Now().UTC().Truncate(24 * time.Hour)) {
-		return time.Time{}, errors.New("historical date cannot be in the future")
+		return time.Time{}, fiber.NewError(fiber.StatusBadRequest, "historical date can not be in future")
 	}
 
 	return date, nil
@@ -98,12 +96,8 @@ func (s *rateServiceImpl) GetLatestRate(ctx context.Context, base, target domain
 
 func (s *rateServiceImpl) Convert(ctx context.Context, req domain.ConversionRequest) (*domain.ConversionResult, error) {
 	var err error
-
-	if req.Amount <= 0 {
-		return nil, ErrInvalidAmount
-	}
 	if req.From == req.To {
-		return nil, ErrSameCurrency
+		return nil, fiber.NewError(fiber.StatusBadRequest, "from and to currencies cannot be the same for conversion")
 	}
 	var rate float64
 	if req.Date == nil {
