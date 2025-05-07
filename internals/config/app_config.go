@@ -17,6 +17,7 @@ type Config struct {
 	RedisAddr          string        `mapstructure:"REDIS_ADDR"`
 	RedisPassword      string        `mapstructure:"REDIS_PASSWORD"`
 	RedisDB            int           `mapstructure:"REDIS_DB"`
+	DateFmt            string        `mapstructure:"DATE_FMT"`
 }
 
 func LoadConfig() (*Config, error) {
@@ -30,12 +31,14 @@ func LoadConfig() (*Config, error) {
 	viper.SetDefault("REDIS_ADDR", "localhost:6379")
 	viper.SetDefault("REDIS_PASSWORD", "")
 	viper.SetDefault("REDIS_DB", 0)
+	viper.SetDefault("DATE_FMT", "2006-01-02")
 
 	viper.AutomaticEnv()
 
 	cfg := &Config{}
 	cfg.ServerPort = viper.GetString("SERVER_PORT")
 	cfg.ExternalAPIURL = viper.GetString("EXTERNAL_API_URL")
+	cfg.DateFmt = viper.GetString("DATE_FMT")
 	cfg.LatestRateCacheTTL, _ = time.ParseDuration(viper.GetString("LATEST_RATE_CACHE_TTL"))
 	cfg.HistoricalCacheTTL, _ = time.ParseDuration(viper.GetString("HISTORICAL_CACHE_TTL"))
 	cfg.RefreshInterval, _ = time.ParseDuration(viper.GetString("REFRESH_INTERVAL"))

@@ -7,6 +7,7 @@ import (
 	"currency-exchange/internals/adapter/exchangerateapi"
 	"currency-exchange/internals/api"
 	"currency-exchange/internals/config"
+	"currency-exchange/internals/helpers"
 	"currency-exchange/internals/repository"
 	"currency-exchange/internals/service"
 	"fmt"
@@ -43,7 +44,8 @@ func main() {
 		DB:       cfg.RedisDB,
 	})
 	redisCache := cache.NewRedisCache(redisClient, cfg.LatestRateCacheTTL, cfg.HistoricalCacheTTL)
-	apiClient := exchangerateapi.NewClient()
+	frankFurterAPI := helpers.NewFrankFurterAPI(cfg.ExternalAPIURL, cfg.DateFmt)
+	apiClient := exchangerateapi.NewClient(frankFurterAPI)
 	rateRepo := repository.NewCachedRateRepository(apiClient, redisCache)
 	rateService := service.NewRateService(rateRepo, 90)
 	apiHandler := api.NewHandler(rateService)

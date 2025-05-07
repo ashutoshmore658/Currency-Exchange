@@ -27,6 +27,7 @@ type RateService interface {
 	GetLatestRates(ctx context.Context, base domain.Currency, targets domain.Currency) (*domain.LatestRates, error)
 	GetHistoricalRates(ctx context.Context, startDate string, endDate string, base domain.Currency, targets domain.Currency) (*domain.HistoricalRates, error)
 	GetSupportedCurrencies() []string
+	ValidateCurrencies(currency domain.Currency) error
 }
 
 type rateServiceImpl struct {
@@ -49,7 +50,7 @@ func (s *rateServiceImpl) GetSupportedCurrencies() []string {
 	return keys
 }
 
-func (s *rateServiceImpl) validateCurrencies(currency domain.Currency) error {
+func (s *rateServiceImpl) ValidateCurrencies(currency domain.Currency) error {
 	if !currency.IsSupported() {
 		return fmt.Errorf("%w: %s", ErrCurrencyNotSupported, currency)
 	}
@@ -76,12 +77,6 @@ func (s *rateServiceImpl) validateDate(dateStr string) (time.Time, error) {
 }
 
 func (s *rateServiceImpl) GetLatestRate(ctx context.Context, base, target domain.Currency) (float64, time.Time, error) {
-	if err := s.validateCurrencies(base); err != nil {
-		return 0, time.Time{}, err
-	}
-	if err := s.validateCurrencies(target); err != nil {
-		return 0, time.Time{}, err
-	}
 
 	if base == target {
 		return 1.0, time.Now().UTC(), nil // Rate to self is always 1
@@ -103,14 +98,6 @@ func (s *rateServiceImpl) GetLatestRate(ctx context.Context, base, target domain
 
 func (s *rateServiceImpl) Convert(ctx context.Context, req domain.ConversionRequest) (*domain.ConversionResult, error) {
 	var err error
-	err = s.validateCurrencies(req.From)
-	if err != nil {
-		return nil, err
-	}
-	err = s.validateCurrencies(req.To)
-	if err != nil {
-		return nil, err
-	}
 
 	if req.Amount <= 0 {
 		return nil, ErrInvalidAmount
@@ -141,12 +128,6 @@ func (s *rateServiceImpl) Convert(ctx context.Context, req domain.ConversionRequ
 }
 
 func (s *rateServiceImpl) GetHistoricalRate(ctx context.Context, onDate time.Time, base, target domain.Currency) (float64, error) {
-	if err := s.validateCurrencies(base); err != nil {
-		return 0, err
-	}
-	if err := s.validateCurrencies(target); err != nil {
-		return 0, err
-	}
 
 	if base == target {
 		return 1.0, nil // Rate to self is always 1
@@ -167,9 +148,6 @@ func (s *rateServiceImpl) GetHistoricalRate(ctx context.Context, onDate time.Tim
 }
 
 func (s *rateServiceImpl) GetLatestRates(ctx context.Context, base domain.Currency, target domain.Currency) (*domain.LatestRates, error) {
-	if err := s.validateCurrencies(base); err != nil {
-		return nil, err
-	}
 
 	rates, timestamp, err := s.repo.GetLatestRates(ctx, base, target)
 	if err != nil {
@@ -193,14 +171,6 @@ func (s *rateServiceImpl) GetHistoricalRates(ctx context.Context, startDate stri
 
 	convEndDate, err := s.validateDate(endDate)
 	if err != nil {
-		return nil, err
-	}
-
-	if err := s.validateCurrencies(base); err != nil {
-		return nil, err
-	}
-
-	if err := s.validateCurrencies(target); err != nil {
 		return nil, err
 	}
 
